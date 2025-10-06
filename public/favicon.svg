@@ -1,0 +1,16 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#1e40af"/>
+  
+  <!-- Lightbulb representing "idea" -->
+  <path d="M12 8C12 6.89543 12.8954 6 14 6H18C19.1046 6 20 6.89543 20 8V10C20 10.5523 19.5523 11 19 11H13C12.4477 11 12 10.5523 12 10V8Z" fill="white"/>
+  <path d="M14 11H18V13C18 13.5523 17.5523 14 17 14H15C14.4477 14 14 13.5523 14 13V11Z" fill="white"/>
+  
+  <!-- Arrow representing transformation -->
+  <path d="M8 16L12 12M12 12L12 20M12 12L16 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Chart bars representing "index" -->
+  <rect x="20" y="18" width="2" height="6" fill="white"/>
+  <rect x="23" y="15" width="2" height="9" fill="white"/>
+  <rect x="26" y="12" width="2" height="12" fill="white"/>
+</svg>

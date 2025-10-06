@@ -1,0 +1,109 @@
+import logging
+from desco_llm.langchain.gateway_chat import GatewayChat
+from langchain.schema import HumanMessage, SystemMessage
+from ..services.constants import SYSTEM_PROMPT
+import re
+import json
+from typing import Dict, List, Any
+from functools import lru_cache
+
+logger = logging.getLogger(__name__)
+
+# Tried below:
+# GPT-4.1-mini-1M: Was working good, sometimes output was not that great, but was fast (~2 seconds to think).
+# GPT-5-400K: The OG, but is very slow. Spends time thinking (~25 seconds to think).
+# Gemini-2.5-Flash-1M: Not that fast, but outputs are good.
+# GPT-5-Nano-400K: Takes 25 seconds to think, so slow! (~25 seconds to think).
+# GPT-4.1-1M: Good one. Decent output, fast enough (~7 seconds to think).
+LLM_CLIENT = GatewayChat(project_name="exp-hackathon25-artificial-ignorance", model="GPT-4.1-1M")
+
+# Cache to store LLM responses to avoid duplicate calls
+@lru_cache(maxsize=100)
+def _get_llm_response_cached(prompt: str) -> str:
+    """Cache LLM responses to avoid duplicate API calls for the same prompt"""
+    logger.debug("Invoking LLM client...")
+    ai_msg = LLM_CLIENT.invoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(prompt)])
+    logger.debug("LLM client invocation completed")
+    return ai_msg.content
+
+def get_index_data_for_prompt(prompt: str) -> Dict[str, Any]:
+    """
+    Get complete index data (portfolio + title) from LLM for a given prompt.
+    This function replaces get_holdings_for_prompt and provides both portfolio and title.
+    
+    Returns:
+        Dict containing 'portfolio' (list of holdings) and 'title' (string)
+    """
+    logger.debug(f"Getting complete index data for prompt: {prompt[:100]}...")
+    
+    def parse_ai_response(ai_content: str) -> Dict[str, Any]:
+        """Parse AI response and extract both portfolio and title"""
+        logger.debug(f"Processing AI response: {ai_content[:200]}...")
+        
+        # Extract JSON block using regex
+        match = re.search(r'\{.*\}', ai_content, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+            logger.debug(f"Extracted JSON string: {json_str[:200]}...")
+            try:
+                data = json.loads(json_str)
+                logger.debug("Successfully parsed JSON from AI response")
+                
+                # Validate required fields
+                if "portfolio" not in data:
+                    logger.error(f"No 'portfolio' key found in parsed data. Available keys: {list(data.keys())}")
+                    raise ValueError("No 'portfolio' key found in AI response data")
+                
+                if "title" not in data:
+                    logger.warning("No 'title' key found in AI response, using prompt as fallback")
+                    data["title"] = f"{prompt.title()} Index"
+                
+                return data
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON from AI response: {e}")
+                logger.error(f"Raw JSON string: {json_str}")
+                raise ValueError(f"Invalid JSON in AI response: {e}")
+        else:
+            logger.error("No JSON block found in AI response")
+            logger.error(f"Full AI response: {ai_content}")
+            raise ValueError("No JSON block found in AI response")
+
+    try:
+        # Use cached LLM response to avoid duplicate API calls
+        ai_content = _get_llm_response_cached(prompt)
+        
+        # Parse the response to get both portfolio and title
+        parsed_data = parse_ai_response(ai_content)
+        
+        portfolio = parsed_data["portfolio"]
+        title = parsed_data["title"]
+        
+        logger.debug(f"Successfully extracted portfolio with {len(portfolio)} items and title: {title}")
+        return {
+            "portfolio": portfolio,
+            "title": title
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in get_index_data_for_prompt: {type(e).__name__}: {e}")
+        raise
+
+def get_holdings_for_prompt(prompt: str) -> List[Dict[str, Any]]:
+    """
+    Legacy function for backwards compatibility.
+    Uses the new cached LLM service internally but only returns the portfolio.
+    """
+    logger.debug(f"Getting holdings for prompt (legacy function): {prompt[:100]}...")
+    
+    try:
+        # Use the new cached function internally
+        index_data = get_index_data_for_prompt(prompt)
+        portfolio = index_data["portfolio"]
+        
+        logger.debug(f"Successfully extracted portfolio with {len(portfolio)} items")
+        return portfolio
+        
+    except Exception as e:
+        logger.error(f"Error in get_holdings_for_prompt: {type(e).__name__}: {e}")
+        raise
