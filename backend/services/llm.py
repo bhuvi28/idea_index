@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # GPT-4.1-1M: Good one. Decent output, fast enough (~7 seconds to think).
 
 # Only run this block for Gemini Developer API
-genai.configure(api_key="AIzaSyAtG4JTwiI8uTN8dwdGdotJUFYhq0DdZmg")
+genai.configure(api_key=process.env.GEMINI_API_KEY)
 
 # Cache to store LLM responses to avoid duplicate calls
 
