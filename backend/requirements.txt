@@ -1,6 +1,5 @@
-# FastAPI and server dependencies
+# FastAPI and server dependencies (minimal for serverless)
 fastapi==0.104.1
-uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
 # Data validation and settings
@@ -14,11 +13,3 @@ numpy==1.26.0
 
 # AI/LLM dependencies
 google-generativeai
-
-# Development and testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-httpx==0.25.2
-
-# Optional: For production deployment
-gunicorn==21.2.0
