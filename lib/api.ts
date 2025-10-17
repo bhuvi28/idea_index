@@ -1,9 +1,9 @@
 import type { IndexData, Holding } from "@/app/page"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://idea-index.onrender.com"
 
 export async function generateIndex(prompt: string): Promise<IndexData> {
-  const response = await fetch(`${API_BASE_URL}/api/generate-index`, {
+  const response = await fetch(`${API_BASE_URL}/generate-index`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,7 +19,7 @@ export async function generateIndex(prompt: string): Promise<IndexData> {
 }
 
 export async function updateHoldings(holdings: Holding[]): Promise<{ message: string; holdings: Holding[] }> {
-  const response = await fetch(`${API_BASE_URL}/api/update-holdings`, {
+  const response = await fetch(`${API_BASE_URL}/update-holdings`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export interface PerformanceData {
 }
 
 export async function fetchPerformanceData(holdings: Holding[], months: number): Promise<PerformanceData> {
-  const response = await fetch(`${API_BASE_URL}/api/performance-data?months=${months}`, {
+  const response = await fetch(`${API_BASE_URL}/performance-data?months=${months}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
