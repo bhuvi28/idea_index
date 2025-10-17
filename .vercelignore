@@ -1,0 +1,10 @@
+# Ignore backend files for Vercel frontend deployment
+backend/
+api/index.py
+requirements.txt
+Procfile
+railway.json
+nixpacks.toml
+.railwayignore
+start_backend.py
+DEPLOYMENT_GUIDE.md

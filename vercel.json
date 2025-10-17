@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "excludeFiles": "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,fixtures/**,__fixtures__/**,testdata/**,sample-data/**,static/**,assets/**,backend/__pycache__/**,backend/**/__pycache__/**,**/*.pyc,**/*.pyo,**/*.pyd,backend/README.md}"
-    }
-  }
+  "ignoreCommand": "echo 'Skipping build check'",
+  "installCommand": "npm install"
 }
