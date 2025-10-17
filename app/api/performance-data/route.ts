@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://mohtam-rh8.toa.des.co:8000'
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
 
 export async function POST(request: NextRequest) {
   try {

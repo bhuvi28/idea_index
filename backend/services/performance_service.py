@@ -53,7 +53,8 @@ class PerformanceService:
                     
                     if not benchmark_values:
                         # Generate fallback benchmark if real data fails
-                        benchmark_values = self._generate_fallback_benchmark_values(len(dates))
+                        logger.error('No benchmark values found')
+                        # benchmark_values = self._generate_fallback_benchmark_values(len(dates))
                     
                     logger.info(f"Successfully generated real performance data with {len(dates)} data points")
                     
@@ -72,7 +73,7 @@ class PerformanceService:
         
         # Fallback to mock data
         logger.info(f"Generating mock performance data for {months} months")
-        return self._generate_mock_performance_data(months, benchmark_name, benchmark_ticker)
+        # return self._generate_mock_performance_data(months, benchmark_name, benchmark_ticker)
     
     def _generate_mock_performance_data(self, months: int, benchmark_name: str, benchmark_ticker: str) -> Dict[str, Any]:
         """Generate mock performance data as fallback"""

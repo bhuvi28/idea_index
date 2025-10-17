@@ -133,11 +133,12 @@ class MarketDataService:
         try:
             # Use yf.download for batch fetching (more efficient)
             logger.info(f"Batch fetching data for {len(tickers)} tickers")
+            print(tickers)
             
             if start_date and end_date:
-                data = yf.download(tickers, start=start_date, end=end_date, interval=interval, group_by='ticker')
+                data = yf.download(tickers, start=start_date, end=end_date, interval=interval)
             else:
-                data = yf.download(tickers, period=period, interval=interval, group_by='ticker')
+                data = yf.download(tickers, period=period, interval=interval)
             
             if len(tickers) == 1:
                 # Single ticker case - yfinance returns different structure
@@ -224,14 +225,14 @@ class MarketDataService:
             
             if not ticker_data:
                 logger.error("No ticker data retrieved")
-                return self._generate_fallback_data(months)
+                # return self._generate_fallback_data(months)
             
             # Calculate weighted portfolio performance with smart sampling
             return self._calculate_weighted_performance(ticker_data, tickers, weights, months)
             
         except Exception as e:
             logger.error(f"Error calculating portfolio performance: {str(e)}")
-            return self._generate_fallback_data(months)
+            # return self._generate_fallback_data(months)
     
     def _calculate_weighted_performance(self, ticker_data: Dict[str, pd.DataFrame], tickers: List[str], weights: List[float], months: int) -> Dict[str, Any]:
         """Calculate weighted portfolio performance from ticker data"""
@@ -271,7 +272,7 @@ class MarketDataService:
             
             if not ticker_prices or all_dates is None or len(all_dates) < 10:
                 logger.error("Insufficient common date range for portfolio calculation")
-                return self._generate_fallback_data(months)
+                # return self._generate_fallback_data(months)
             
             # Sort dates and limit to requested months
             all_dates = sorted(all_dates)
@@ -299,7 +300,8 @@ class MarketDataService:
                 portfolio_values.append(portfolio_value)
             
             if not portfolio_values:
-                return self._generate_fallback_data(months)
+                logger.error('No portfolio value')
+                # return self._generate_fallback_data(months)
             
             # Normalize to start at 100
             start_value = portfolio_values[0]
@@ -316,7 +318,7 @@ class MarketDataService:
             
         except Exception as e:
             logger.error(f"Error in weighted performance calculation: {str(e)}")
-            return self._generate_fallback_data(months)
+            # return self._generate_fallback_data(months)
     
     def fetch_benchmark_performance(self, benchmark_ticker: str, dates: List[str], months: int = 12) -> List[float]:
         """
@@ -354,7 +356,7 @@ class MarketDataService:
                 prices = benchmark_data['Close']
             else:
                 logger.error(f"No price columns found for benchmark {benchmark_ticker}")
-                return self._generate_fallback_benchmark(len(dates))
+                # return self._generate_fallback_benchmark(len(dates))
             
             # Apply smart sampling to benchmark data
             prices_df = pd.DataFrame({'price': prices}, index=prices.index)
@@ -389,7 +391,8 @@ class MarketDataService:
                         benchmark_values.append(prices.iloc[0])
             
             if not benchmark_values:
-                return self._generate_fallback_benchmark(len(dates))
+                logger.error('No benchmark value found')
+                # return self._generate_fallback_benchmark(len(dates))
             
             # Normalize to start at 100
             start_value = benchmark_values[0]
@@ -399,7 +402,7 @@ class MarketDataService:
             
         except Exception as e:
             logger.error(f"Error fetching benchmark performance: {str(e)}")
-            return self._generate_fallback_benchmark(len(dates))
+            # return self._generate_fallback_benchmark(len(dates))
     
     def _generate_fallback_data(self, months: int) -> Dict[str, Any]:
         """Generate fallback mock data if real data fetching fails"""

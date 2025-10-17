@@ -1,11 +1,11 @@
 import logging
-from desco_llm.langchain.gateway_chat import GatewayChat
-from langchain.schema import HumanMessage, SystemMessage
 from ..services.constants import SYSTEM_PROMPT
 import re
 import json
 from typing import Dict, List, Any
 from functools import lru_cache
+import google.generativeai as genai
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +15,23 @@ logger = logging.getLogger(__name__)
 # Gemini-2.5-Flash-1M: Not that fast, but outputs are good.
 # GPT-5-Nano-400K: Takes 25 seconds to think, so slow! (~25 seconds to think).
 # GPT-4.1-1M: Good one. Decent output, fast enough (~7 seconds to think).
-LLM_CLIENT = GatewayChat(project_name="exp-hackathon25-artificial-ignorance", model="GPT-4.1-1M")
+
+# Only run this block for Gemini Developer API
+genai.configure(api_key="AIzaSyAtG4JTwiI8uTN8dwdGdotJUFYhq0DdZmg")
 
 # Cache to store LLM responses to avoid duplicate calls
+
 @lru_cache(maxsize=100)
 def _get_llm_response_cached(prompt: str) -> str:
     """Cache LLM responses to avoid duplicate API calls for the same prompt"""
     logger.debug("Invoking LLM client...")
-    ai_msg = LLM_CLIENT.invoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(prompt)])
+    model = genai.GenerativeModel(
+        "gemini-2.5-flash",
+        system_instruction=SYSTEM_PROMPT
+    )
+    response = model.generate_content(prompt)
     logger.debug("LLM client invocation completed")
-    return ai_msg.content
+    return response.text
 
 def get_index_data_for_prompt(prompt: str) -> Dict[str, Any]:
     """
