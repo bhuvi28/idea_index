@@ -1,12 +1,11 @@
-[providers]
-python = true
+providers = ["python"]
 
 [phases.setup]
-nixPkgs = ['python311']
+nixPkgs = ["python311"]
 aptPkgs = []
 
 [phases.install]
-cmds = ['pip install -r requirements.txt']
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = 'uvicorn backend.main:app --host 0.0.0.0 --port $PORT'
+cmd = "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"
