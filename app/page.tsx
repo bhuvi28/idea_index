@@ -49,7 +49,8 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/generate-index", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://idea-index.onrender.com"
+      const response = await fetch(`${API_URL}/generate-index`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
