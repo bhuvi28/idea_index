@@ -2,6 +2,7 @@ import logging
 from ..services.constants import SYSTEM_PROMPT
 import re
 import json
+import os
 from typing import Dict, List, Any
 from functools import lru_cache
 import google.generativeai as genai
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 # GPT-4.1-1M: Good one. Decent output, fast enough (~7 seconds to think).
 
 # Only run this block for Gemini Developer API
-genai.configure(api_key=process.env.GEMINI_API_KEY)
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # Cache to store LLM responses to avoid duplicate calls
 
