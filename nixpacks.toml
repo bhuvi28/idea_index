@@ -1,5 +1,9 @@
+[providers]
+python = true
+
 [phases.setup]
 nixPkgs = ['python311']
+aptPkgs = []
 
 [phases.install]
 cmds = ['pip install -r requirements.txt']
