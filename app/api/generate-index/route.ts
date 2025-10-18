@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       console.error('Error calling FastAPI backend:', fetchError)
       
       // Fallback to mock data if FastAPI is unavailable
-      console.log('Falling back to mock data generation')
+      // console.log('Falling back to mock data generation')
       
       // Simplified mock data as fallback
       // const mockResponse = {
