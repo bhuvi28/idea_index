@@ -8,6 +8,7 @@ import type { IndexData } from "@/app/page"
 import HoldingsTable from "@/components/holdings-table"
 import PerformanceChart from "@/components/performance-chart"
 import CompositionChart from "@/components/composition-chart"
+import FundMappingTable from "@/components/fund-mapping-table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { generateMockPerformanceData, generateMockStats, generateBenchmarkStats } from "@/lib/mock-data"
 import { fetchPerformanceData, type PerformanceData } from "@/lib/api"
@@ -493,6 +494,19 @@ export default function ResultsPage({ indexData, onBack, onUpdateHoldings }: Res
           </CardHeader>
           <CardContent>
             <HoldingsTable holdings={indexData.holdings} onWeightUpdate={handleWeightUpdate} />
+          </CardContent>
+        </Card>
+
+        {/* Fund Mapping Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Mutual Fund Exposure Analysis</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Discover which mutual funds have holdings that overlap with your selected stocks
+            </p>
+          </CardHeader>
+          <CardContent>
+            <FundMappingTable holdings={indexData.holdings} />
           </CardContent>
         </Card>
       </div>
