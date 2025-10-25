@@ -56,6 +56,7 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
   const [sortBy, setSortBy] = useState<'exposure' | 'name' | 'holdings'>('exposure')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [expandedFunds, setExpandedFunds] = useState<Set<string>>(new Set())
+  const [selectedAMCs, setSelectedAMCs] = useState<Set<string>>(new Set())
 
   // Fetch fund mapping data
   useEffect(() => {
@@ -89,23 +90,42 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
     setExpandedFunds(newExpanded)
   }
 
-  const sortedFunds = mappingData?.fund_mappings ? [...mappingData.fund_mappings].sort((a, b) => {
-    let comparison = 0
-    
-    switch (sortBy) {
-      case 'exposure':
-        comparison = a.total_exposure - b.total_exposure
-        break
-      case 'name':
-        comparison = a.fund_name.localeCompare(b.fund_name)
-        break
-      case 'holdings':
-        comparison = a.num_overlapping_holdings - b.num_overlapping_holdings
-        break
+  // Get unique AMCs from the data
+  const availableAMCs = mappingData?.fund_mappings 
+    ? Array.from(new Set(mappingData.fund_mappings.map(f => f.amc_name))).sort()
+    : []
+
+  // Toggle AMC selection
+  const toggleAMC = (amc: string) => {
+    const newSelected = new Set(selectedAMCs)
+    if (newSelected.has(amc)) {
+      newSelected.delete(amc)
+    } else {
+      newSelected.add(amc)
     }
-    
-    return sortOrder === 'asc' ? comparison : -comparison
-  }) : []
+    setSelectedAMCs(newSelected)
+  }
+
+  // Filter and sort funds
+  const sortedFunds = mappingData?.fund_mappings ? [...mappingData.fund_mappings]
+    .filter(fund => selectedAMCs.size === 0 || selectedAMCs.has(fund.amc_name))
+    .sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'exposure':
+          comparison = a.total_exposure - b.total_exposure
+          break
+        case 'name':
+          comparison = a.fund_name.localeCompare(b.fund_name)
+          break
+        case 'holdings':
+          comparison = a.num_overlapping_holdings - b.num_overlapping_holdings
+          break
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison
+    }) : []
 
   if (isLoading) {
     return (
@@ -251,19 +271,95 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
         </Card>
       </div>
 
+      {/* AMC Filter Section */}
+      {availableAMCs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Compare AMCs</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Select AMCs to compare. Leave all unchecked to view all funds.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {availableAMCs.map((amc) => {
+                const amcFunds = mappingData?.fund_mappings.filter(f => f.amc_name === amc) || []
+                const amcCount = amcFunds.length
+                const avgExposure = amcFunds.length > 0 
+                  ? (amcFunds.reduce((sum, f) => sum + f.total_exposure, 0) / amcFunds.length).toFixed(2)
+                  : '0.00'
+                
+                return (
+                  <TooltipProvider key={amc}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={selectedAMCs.has(amc) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleAMC(amc)}
+                          className="flex items-center gap-2"
+                        >
+                          <Building2 className="h-3 w-3" />
+                          {amc}
+                          <Badge variant="secondary" className="ml-1">
+                            {amcCount}
+                          </Badge>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-xs">
+                          <p className="font-semibold">{amc}</p>
+                          <p>Funds: {amcCount}</p>
+                          <p>Avg Exposure: {avgExposure}%</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              })}
+            </div>
+            {selectedAMCs.size > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Comparing {selectedAMCs.size} AMC{selectedAMCs.size > 1 ? 's' : ''} ({sortedFunds.length} funds)
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedAMCs(new Set())}
+                >
+                  Clear All
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Label htmlFor="min-exposure">Minimum Exposure (%)</Label>
           <Input
             id="min-exposure"
-            type="number"
-            step="0.1"
-            min="0"
-            max="100"
+            type="text"
+            inputMode="decimal"
             value={minExposure}
-            onChange={(e) => setMinExposure(parseFloat(e.target.value) || 0.1)}
+            onChange={(e) => {
+              const value = e.target.value
+              // Allow empty string, numbers, and decimal point
+              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                const numValue = parseFloat(value)
+                if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                  setMinExposure(numValue)
+                } else if (value === '') {
+                  setMinExposure(0.1)
+                }
+              }
+            }}
+            onWheel={(e) => e.currentTarget.blur()}
             className="mt-1"
+            placeholder="0.1"
           />
         </div>
         

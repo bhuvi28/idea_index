@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, TrendingUp } from "lucide-react"
 import type { IndexData } from "@/app/page"
 import HoldingsTable from "@/components/holdings-table"
 import PerformanceChart from "@/components/performance-chart"
 import CompositionChart from "@/components/composition-chart"
-import FundMappingTable from "@/components/fund-mapping-table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { generateMockPerformanceData, generateMockStats, generateBenchmarkStats } from "@/lib/mock-data"
 import { fetchPerformanceData, type PerformanceData } from "@/lib/api"
@@ -17,6 +16,7 @@ interface ResultsPageProps {
   indexData: IndexData
   onBack: () => void
   onUpdateHoldings: (data: IndexData) => void
+  onViewFundAnalysis: () => void
 }
 
 const TIME_PERIODS = [
@@ -28,7 +28,7 @@ const TIME_PERIODS = [
   { label: "5Y", value: 60, display: "5 Years" },
 ]
 
-export default function ResultsPage({ indexData, onBack, onUpdateHoldings }: ResultsPageProps) {
+export default function ResultsPage({ indexData, onBack, onUpdateHoldings, onViewFundAnalysis }: ResultsPageProps) {
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(12) // Default to 1 year
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null)
   const [isLoadingPerformance, setIsLoadingPerformance] = useState(false)
@@ -497,16 +497,31 @@ export default function ResultsPage({ indexData, onBack, onUpdateHoldings }: Res
           </CardContent>
         </Card>
 
-        {/* Fund Mapping Analysis */}
-        <Card>
+        {/* Fund Mapping Analysis CTA */}
+        <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
           <CardHeader>
-            <CardTitle>Mutual Fund Exposure Analysis</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Mutual Fund Exposure Analysis
+            </CardTitle>
             <p className="text-sm text-muted-foreground">
               Discover which mutual funds have holdings that overlap with your selected stocks
             </p>
           </CardHeader>
           <CardContent>
-            <FundMappingTable holdings={indexData.holdings} />
+            <div className="flex flex-col gap-4">
+              <p className="text-gray-700">
+                Compare multiple AMCs and analyze fund exposures to find the best mutual funds that align with your index strategy.
+              </p>
+              <Button 
+                onClick={onViewFundAnalysis}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                size="lg"
+              >
+                <TrendingUp className="mr-2 h-4 w-4" />
+                View Fund Analysis
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import LandingPage from "@/components/landing-page"
 import ResultsPage from "@/components/results-page"
+import FundAnalysisPage from "@/components/fund-analysis-page"
 import { generateMockPerformanceData, generateMockStats } from "@/lib/mock-data"
 
 export interface Holding {
@@ -41,7 +42,7 @@ export interface IndexData {
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<"landing" | "results">("landing")
+  const [currentView, setCurrentView] = useState<"landing" | "results" | "fund-analysis">("landing")
   const [indexData, setIndexData] = useState<IndexData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -154,6 +155,14 @@ export default function Home() {
     setIndexData(null)
   }
 
+  const handleViewFundAnalysis = () => {
+    setCurrentView("fund-analysis")
+  }
+
+  const handleBackToResults = () => {
+    setCurrentView("results")
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Persistent disclaimer banner */}
@@ -163,8 +172,22 @@ export default function Home() {
 
       {currentView === "landing" ? (
         <LandingPage onGenerateIndex={handleGenerateIndex} isLoading={isLoading} />
+      ) : currentView === "results" ? (
+        indexData && (
+          <ResultsPage 
+            indexData={indexData} 
+            onBack={handleBackToLanding} 
+            onUpdateHoldings={setIndexData}
+            onViewFundAnalysis={handleViewFundAnalysis}
+          />
+        )
       ) : (
-        indexData && <ResultsPage indexData={indexData} onBack={handleBackToLanding} onUpdateHoldings={setIndexData} />
+        indexData && (
+          <FundAnalysisPage 
+            indexData={indexData} 
+            onBack={handleBackToResults}
+          />
+        )
       )}
     </div>
   )
