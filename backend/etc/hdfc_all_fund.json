@@ -2,7 +2,7 @@
     "amc": "HDFC Mutual Fund",
     "funds": [
       {
-        "fund_name": "HDFC Flexi Cap Fund - Direct Plan - Growth Option",
+        "fund_name": "HDFC Flexi Cap Fund Growth Option",
         "fund_metadata": {
           "category": "Flexi Cap Fund",
           "scheme_type": "An open ended dynamic equity scheme investing across large cap, mid cap & small cap stocks.",
@@ -6204,7 +6204,7 @@
         }
       },
       {
-        "fund_name": "HDFC Value Fund - Direct Plan - Growth Option",
+        "fund_name": "HDFC Value Fund - Growth Option",
         "fund_metadata": {
           "category": "VALUE FUND",
           "scheme_type": "Open Ended Equity Scheme",
@@ -13329,7 +13329,7 @@
         },
         "holdings": [
           {
-            "company": "HDFC Flexi Cap Fund - Direct Plan- Growth Option",
+            "company": "HDFC Flexi Cap Fund - Growth Option",
             "sector_or_rating": "Mutual Fund Units",
             "type": "Mutual Fund Units",
             "percentage_to_nav": 4.52,
@@ -13338,7 +13338,7 @@
             "exposure_type": null
           },
           {
-            "company": "HDFC Large and Mid Cap Fund - Direct Plan- Growth Option",
+            "company": "HDFC Large and Mid Cap Fund - Growth Option",
             "sector_or_rating": "Mutual Fund Units",
             "type": "Mutual Fund Units",
             "percentage_to_nav": 9.05,
@@ -13347,7 +13347,7 @@
             "exposure_type": null
           },
           {
-            "company": "HDFC Large Cap Fund - Direct Plan - Growth Option",
+            "company": "HDFC Large Cap Fund - Growth Option",
             "sector_or_rating": "Mutual Fund Units",
             "type": "Mutual Fund Units",
             "percentage_to_nav": 13.55,
@@ -13356,7 +13356,7 @@
             "exposure_type": null
           },
           {
-            "company": "HDFC Small Cap Fund - Direct Plan- Growth Option",
+            "company": "HDFC Small Cap Fund - Growth Option",
             "sector_or_rating": "Mutual Fund Units",
             "type": "Mutual Fund Units",
             "percentage_to_nav": 4.54,
@@ -17421,7 +17421,7 @@
         }
       },
       {
-        "fund_name": "HDFC Multi-Asset Fund - Direct Plan - Growth Option",
+        "fund_name": "HDFC Multi-Asset Fund - Growth Option",
         "fund_metadata": {
           "category": "MULTI ASSET ALLOCATION FUND",
           "scheme_type": "Open Ended Scheme",
