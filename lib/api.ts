@@ -131,7 +131,7 @@ export interface FundMappingData {
   error?: string
 }
 
-export async function fetchFundMapping(holdings: any[], minExposure: number = 0.1): Promise<FundMappingData> {
+export async function fetchFundMapping(holdings: any[], minExposure: number = 5.0): Promise<FundMappingData> {
   const response = await fetch(`${API_BASE_URL}/fund-mapping?min_exposure=${minExposure}`, {
     method: "POST",
     headers: {
