@@ -35,41 +35,7 @@ import {
   BarChart3,
   Info
 } from "lucide-react"
-
-interface FundMapping {
-  fund_name: string
-  amc_name: string
-  fund_metadata: {
-    category?: string
-    aum?: string
-    nav?: string
-    benchmark?: string
-  }
-  overlapping_holdings: Array<{
-    ticker: string
-    company_name: string
-    exposure_percentage: number
-    sector: string
-    type: string
-  }>
-  total_exposure: number
-  overlapping_tickers: string[]
-  num_overlapping_holdings: number
-}
-
-interface FundMappingData {
-  total_tickers: number
-  valid_tickers: number
-  valid_ticker_list: string[]
-  fund_mappings: FundMapping[]
-  summary: {
-    total_funds_analyzed: number
-    funds_with_overlap: number
-    max_exposure: number
-    amcs_analyzed: string[]
-  }
-  error?: string
-}
+import { fetchFundMapping, type FundMappingData } from "@/lib/api"
 
 interface FundMappingTableProps {
   holdings: Array<{
@@ -93,26 +59,14 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
 
   // Fetch fund mapping data
   useEffect(() => {
-    const fetchFundMapping = async () => {
+    const loadFundMapping = async () => {
       if (!holdings || holdings.length === 0) return
 
       setIsLoading(true)
       setError(null)
 
       try {
-        const response = await fetch(`/api/fund-mapping?min_exposure=${minExposure}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(holdings),
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const data = await response.json()
+        const data = await fetchFundMapping(holdings, minExposure)
         setMappingData(data)
       } catch (err) {
         console.error('Error fetching fund mapping:', err)
@@ -122,7 +76,7 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
       }
     }
 
-    fetchFundMapping()
+    loadFundMapping()
   }, [holdings, minExposure])
 
   const toggleFundExpansion = (fundName: string) => {
