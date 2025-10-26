@@ -53,12 +53,13 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [minExposure, setMinExposure] = useState(0.1)
+  const [appliedMinExposure, setAppliedMinExposure] = useState(0.1)
   const [sortBy, setSortBy] = useState<'exposure' | 'name' | 'holdings'>('exposure')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [expandedFunds, setExpandedFunds] = useState<Set<string>>(new Set())
   const [selectedAMCs, setSelectedAMCs] = useState<Set<string>>(new Set())
 
-  // Fetch fund mapping data
+  // Fetch fund mapping data - only when holdings change, not on exposure change
   useEffect(() => {
     const loadFundMapping = async () => {
       if (!holdings || holdings.length === 0) return
@@ -67,7 +68,8 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
       setError(null)
 
       try {
-        const data = await fetchFundMapping(holdings, minExposure)
+        // Always fetch with 0.0 min exposure to get all data, filter on UI
+        const data = await fetchFundMapping(holdings, 5.0)
         setMappingData(data)
       } catch (err) {
         console.error('Error fetching fund mapping:', err)
@@ -78,7 +80,12 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
     }
 
     loadFundMapping()
-  }, [holdings, minExposure])
+  }, [holdings])
+
+  // Handle applying the exposure filter
+  const handleApplyFilter = () => {
+    setAppliedMinExposure(minExposure)
+  }
 
   const toggleFundExpansion = (fundName: string) => {
     const newExpanded = new Set(expandedFunds)
@@ -106,8 +113,9 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
     setSelectedAMCs(newSelected)
   }
 
-  // Filter and sort funds
+  // Filter and sort funds - filter by fund-level total_exposure
   const sortedFunds = mappingData?.fund_mappings ? [...mappingData.fund_mappings]
+    .filter(fund => fund.total_exposure >= appliedMinExposure) // Filter by fund-level exposure
     .filter(fund => selectedAMCs.size === 0 || selectedAMCs.has(fund.amc_name))
     .sort((a, b) => {
       let comparison = 0
@@ -227,8 +235,11 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-4 w-4 text-blue-600" />
               <div>
-                <p className="text-sm font-medium text-gray-600">Funds with Overlap</p>
-                <p className="text-2xl font-bold">{mappingData.summary.funds_with_overlap}</p>
+                <p className="text-sm font-medium text-gray-600">Funds Shown</p>
+                <p className="text-2xl font-bold">{sortedFunds.length}</p>
+                {sortedFunds.length !== mappingData.summary.funds_with_overlap && (
+                  <p className="text-xs text-muted-foreground">of {mappingData.summary.funds_with_overlap} total</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -252,7 +263,14 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
               <BarChart3 className="h-4 w-4 text-purple-600" />
               <div>
                 <p className="text-sm font-medium text-gray-600">Max Exposure</p>
-                <p className="text-2xl font-bold">{mappingData.summary.max_exposure}%</p>
+                <p className="text-2xl font-bold">
+                  {sortedFunds.length > 0 
+                    ? Math.max(...sortedFunds.map(f => f.total_exposure)).toFixed(2)
+                    : '5.00'}%
+                </p>
+                {sortedFunds.length > 0 && (
+                  <p className="text-xs text-muted-foreground">in filtered results</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -339,28 +357,47 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
-          <Label htmlFor="min-exposure">Minimum Exposure (%)</Label>
-          <Input
-            id="min-exposure"
-            type="text"
-            inputMode="decimal"
-            value={minExposure}
-            onChange={(e) => {
-              const value = e.target.value
-              // Allow empty string, numbers, and decimal point
-              if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                const numValue = parseFloat(value)
-                if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                  setMinExposure(numValue)
-                } else if (value === '') {
-                  setMinExposure(0.1)
+          <Label htmlFor="min-exposure">Minimum Fund Exposure (%)</Label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              id="min-exposure"
+              type="text"
+              inputMode="decimal"
+              value={minExposure}
+              onChange={(e) => {
+                const value = e.target.value
+                // Allow empty string, numbers, and decimal point
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  const numValue = parseFloat(value)
+                  if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                    setMinExposure(numValue)
+                  } else if (value === '') {
+                    setMinExposure(0.1)
+                  }
                 }
-              }
-            }}
-            onWheel={(e) => e.currentTarget.blur()}
-            className="mt-1"
-            placeholder="0.1"
-          />
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleApplyFilter()
+                }
+              }}
+              onWheel={(e) => e.currentTarget.blur()}
+              placeholder="5.0"
+            />
+            <Button 
+              onClick={handleApplyFilter}
+              variant="default"
+              className="whitespace-nowrap"
+            >
+              Apply Filter
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Filters funds by total exposure to your portfolio
+            {appliedMinExposure !== minExposure && (
+              <span className="text-blue-600 font-medium"> • Currently showing: ≥{appliedMinExposure}%</span>
+            )}
+          </p>
         </div>
         
         <div className="flex-1">
