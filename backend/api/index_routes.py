@@ -17,41 +17,53 @@ async def generate_index(request: IndexRequest):
     """Generate investment index from user prompt"""
     logger.info(f"Starting index generation for prompt: {request.prompt[:100]}...")
     
-    # Initialize services
-    index_service = IndexGeneratorService()
-    performance_service = PerformanceService()
+    try:
+        # Initialize services
+        index_service = IndexGeneratorService()
+        performance_service = PerformanceService()
 
-    # Generate both holdings and title with single LLM call (optimized)
-    logger.debug("Generating index data (holdings + title)...")
-    index_data = index_service.generate_index_data(request.prompt)
-    holdings = index_data["holdings"]
-    index_name = index_data["title"]
-    logger.debug(f"Generated {len(holdings)} holdings and title: {index_name}")
-    
-    # Generate performance components
-    logger.debug("Generating performance data...")
-    performance_data = performance_service.generate_performance_data(holdings, months=12, use_real_data=True)
-    
-    logger.debug("Generating stats...")
-    stats = performance_service.generate_stats(performance_data, use_real_data=True)
-    
-    logger.debug("Generating benchmark stats...")
-    benchmark_ticker = performance_data.get("benchmark_ticker", "^GSPC")
-    benchmark_stats = performance_service.generate_benchmark_stats(performance_data, benchmark_ticker, use_real_data=True)
-    
-    logger.debug("Generating scores...")
-    scores = performance_service.generate_scores()
-    
-    logger.info("Index generation completed successfully")
-    return IndexResponse(
-        index_name=index_name,
-        original_prompt=request.prompt,
-        holdings=holdings,
-        performance_data=performance_data,
-        stats=stats,
-        benchmark_stats=benchmark_stats,
-        scores=scores
-    )
+        # Generate both holdings and title with single LLM call (optimized)
+        logger.debug("Generating index data (holdings + title)...")
+        index_data = index_service.generate_index_data(request.prompt)
+        holdings = index_data["holdings"]
+        index_name = index_data["title"]
+        logger.debug(f"Generated {len(holdings)} holdings and title: {index_name}")
+        
+        # Generate performance components
+        logger.debug("Generating performance data...")
+        performance_data = performance_service.generate_performance_data(holdings, months=12, use_real_data=True)
+        
+        logger.debug("Generating stats...")
+        stats = performance_service.generate_stats(performance_data, use_real_data=True)
+        
+        logger.debug("Generating benchmark stats...")
+        benchmark_ticker = performance_data.get("benchmark_ticker", "^GSPC")
+        benchmark_stats = performance_service.generate_benchmark_stats(performance_data, benchmark_ticker, use_real_data=True)
+        
+        logger.debug("Generating scores...")
+        scores = performance_service.generate_scores()
+        
+        logger.info("Index generation completed successfully")
+        return IndexResponse(
+            index_name=index_name,
+            original_prompt=request.prompt,
+            holdings=holdings,
+            performance_data=performance_data,
+            stats=stats,
+            benchmark_stats=benchmark_stats,
+            scores=scores
+        )
+    except Exception as e:
+        logger.error(f"Error generating index: {str(e)}")
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to generate index",
+                "message": str(e),
+                "type": "llm_error" if "LLM" in str(e) else "server_error"
+            }
+        )
 
 
 @router.post("/performance-data")
@@ -115,7 +127,7 @@ async def get_performance_data(
 @router.post("/fund-mapping")
 async def get_fund_mapping(
     holdings: List[Dict[str, Any]],
-    min_exposure: float = Query(default=0.1, ge=0.0, le=100.0, description="Minimum exposure percentage to include")
+    min_exposure: float = Query(default=5.0, ge=0.0, le=100.0, description="Minimum exposure percentage to include")
 ):
     """Map LLM-generated tickers to mutual fund holdings and calculate exposure"""
     logger.info(f"Mapping {len(holdings)} holdings to fund exposures")

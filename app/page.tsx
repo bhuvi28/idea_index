@@ -45,9 +45,11 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<"landing" | "results" | "fund-analysis">("landing")
   const [indexData, setIndexData] = useState<IndexData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<{ message: string; type: string } | null>(null)
 
   const handleGenerateIndex = async (prompt: string) => {
     setIsLoading(true)
+    setError(null)
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://idea-index.onrender.com"
@@ -58,93 +60,20 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to generate index")
+        const errorData = await response.json()
+        throw new Error(errorData.message || errorData.error || "Failed to generate index")
       }
 
       const data: IndexData = await response.json()
       setIndexData(data)
       setCurrentView("results")
+      setError(null)
     } catch (error) {
       console.error("Error generating index:", error)
-      // Fallback to mock data if API fails
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Generate performance data first
-      const performanceData = generateMockPerformanceData(12, [
-        { country: "US" },
-        { country: "US" },
-        { country: "US" },
-        { country: "US" },
-        { country: "US" }
-      ]) // 12 months of data
-      const stats = generateMockStats(performanceData)
-
-      const mockData: IndexData = {
-        index_name: `${prompt} Index`,
-        original_prompt: prompt,
-        holdings: [
-          {
-            ticker: "AAPL",
-            security_name: "Apple Inc.",
-            country: "United States",
-            sector: "Technology",
-            market_cap: "Large Cap",
-            selection_rationale: "Leading consumer electronics and services company with strong AI integration",
-            weight: 25.5,
-          },
-          {
-            ticker: "MSFT",
-            security_name: "Microsoft Corporation",
-            country: "United States",
-            sector: "Technology",
-            market_cap: "Large Cap",
-            selection_rationale: "Dominant cloud computing platform with extensive AI capabilities",
-            weight: 22.3,
-          },
-          {
-            ticker: "GOOGL",
-            security_name: "Alphabet Inc.",
-            country: "United States",
-            sector: "Technology",
-            market_cap: "Large Cap",
-            selection_rationale: "Search engine leader with cutting-edge AI research and development",
-            weight: 20.1,
-          },
-          {
-            ticker: "NVDA",
-            security_name: "NVIDIA Corporation",
-            country: "United States",
-            sector: "Technology",
-            market_cap: "Large Cap",
-            selection_rationale: "AI chip manufacturing leader enabling machine learning revolution",
-            weight: 18.7,
-          },
-          {
-            ticker: "TSLA",
-            security_name: "Tesla Inc.",
-            country: "United States",
-            sector: "Consumer Discretionary",
-            market_cap: "Large Cap",
-            selection_rationale: "Electric vehicle pioneer with autonomous driving AI technology",
-            weight: 13.4,
-          },
-        ],
-        performance_data: performanceData,
-        stats: stats,
-        scores: {
-          asset_score: { score: 8, max_score: 10, description: "Quality and fundamentals of underlying assets" },
-          returns_score: { score: 7, max_score: 10, description: "Historical and expected return performance" },
-          stability_score: { score: 8, max_score: 10, description: "Volatility and downside risk management" },
-          diversification_score: {
-            score: 6,
-            max_score: 10,
-            description: "Portfolio concentration and correlation analysis",
-          },
-        },
-      }
-
-      setIndexData(mockData)
-      setCurrentView("results")
+      setError({
+        message: error instanceof Error ? error.message : "An unexpected error occurred",
+        type: "error"
+      })
     } finally {
       setIsLoading(false)
     }
@@ -171,7 +100,11 @@ export default function Home() {
       </div>
 
       {currentView === "landing" ? (
-        <LandingPage onGenerateIndex={handleGenerateIndex} isLoading={isLoading} />
+        <LandingPage 
+          onGenerateIndex={handleGenerateIndex} 
+          isLoading={isLoading} 
+          error={error}
+        />
       ) : currentView === "results" ? (
         indexData && (
           <ResultsPage 

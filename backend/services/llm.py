@@ -3,12 +3,18 @@ from ..services.constants import SYSTEM_PROMPT
 import re
 import json
 import os
+import time
 from typing import Dict, List, Any
 from functools import lru_cache
 import google.generativeai as genai
 
 
 logger = logging.getLogger(__name__)
+
+# Retry configuration
+MAX_RETRIES = 3
+INITIAL_RETRY_DELAY = 20  # seconds
+RETRY_BACKOFF_MULTIPLIER = 2
 
 # Tried below:
 # GPT-4.1-mini-1M: Was working good, sometimes output was not that great, but was fast (~2 seconds to think).
@@ -26,15 +32,39 @@ logger = logging.getLogger(__name__)
 
 @lru_cache(maxsize=100)
 def _get_llm_response_cached(prompt: str) -> str:
-    """Cache LLM responses to avoid duplicate API calls for the same prompt"""
+    """
+    Cache LLM responses to avoid duplicate API calls for the same prompt.
+    Includes retry logic with exponential backoff for handling transient failures.
+    """
     logger.debug("Invoking LLM client...")
-    model = genai.GenerativeModel(
-        "gemini-2.5-flash",
-        system_instruction=SYSTEM_PROMPT
-    )
-    response = model.generate_content(prompt)
-    logger.debug("LLM client invocation completed")
-    return response.text
+    
+    last_exception = None
+    retry_delay = INITIAL_RETRY_DELAY
+    
+    for attempt in range(MAX_RETRIES):
+        try:
+            model = genai.GenerativeModel(
+                "gemini-2.5-flash",
+                system_instruction=SYSTEM_PROMPT
+            )
+            response = model.generate_content(prompt)
+            logger.debug(f"LLM client invocation completed successfully on attempt {attempt + 1}")
+            return response.text
+            
+        except Exception as e:
+            last_exception = e
+            logger.warning(f"LLM API call failed on attempt {attempt + 1}/{MAX_RETRIES}: {type(e).__name__}: {e}")
+            
+            # Don't retry on the last attempt
+            if attempt < MAX_RETRIES - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= RETRY_BACKOFF_MULTIPLIER
+            else:
+                logger.error(f"All {MAX_RETRIES} retry attempts failed for LLM API call")
+    
+    # If we get here, all retries failed
+    raise Exception(f"LLM API call failed after {MAX_RETRIES} attempts: {last_exception}")
 
 def get_index_data_for_prompt(prompt: str) -> Dict[str, Any]:
     """

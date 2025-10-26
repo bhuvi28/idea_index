@@ -12,6 +12,7 @@ import DynamicHoverBackground from "@/components/dynamic-hover-background"
 interface LandingPageProps {
   onGenerateIndex: (prompt: string) => void
   isLoading: boolean
+  error?: { message: string; type: string } | null
 }
 
 const PROMPT_CHIPS = [
@@ -218,7 +219,7 @@ const DETERMINISTIC_ROWS = [
   ]
 ]
 
-export default function LandingPage({ onGenerateIndex, isLoading }: LandingPageProps) {
+export default function LandingPage({ onGenerateIndex, isLoading, error }: LandingPageProps) {
   const [prompt, setPrompt] = useState("")
   const [isPaused, setIsPaused] = useState(false)
   const [currentStatusMessage, setCurrentStatusMessage] = useState("")
@@ -268,6 +269,37 @@ export default function LandingPage({ onGenerateIndex, isLoading }: LandingPageP
             ✨ Move your cursor around to reveal hidden investment themes beneath
           </p>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <Card className="p-4 bg-destructive/10 border-destructive max-w-2xl mx-auto">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="h-5 w-5 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-destructive">Failed to Generate Index</h3>
+                  <p className="text-sm text-destructive/90 mt-1">{error.message}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    The system attempted to retry the request multiple times. Please try again.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => prompt.trim() && onGenerateIndex(prompt.trim())}
+                variant="outline"
+                size="sm"
+                className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                disabled={!prompt.trim()}
+              >
+                Retry
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Main input form */}
         <Card className="p-6 bg-card border border-border max-w-2xl mx-auto">

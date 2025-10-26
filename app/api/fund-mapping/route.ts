@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { searchParams } = new URL(request.url)
-    const minExposure = searchParams.get('min_exposure') || '0.1'
+    const minExposure = searchParams.get('min_exposure') || '5.0'
     
     console.log("Frontend API: Proxying fund-mapping request", {
       minExposure,
