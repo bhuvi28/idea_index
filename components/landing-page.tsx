@@ -292,7 +292,7 @@ export default function LandingPage({ onGenerateIndex, isLoading, error }: Landi
                 onClick={() => prompt.trim() && onGenerateIndex(prompt.trim())}
                 variant="outline"
                 size="sm"
-                className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                className="w-full border-destructive text-destructive hover:bg-destructive hover:text-white transition-colors"
                 disabled={!prompt.trim()}
               >
                 Retry

@@ -382,11 +382,14 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
                 const value = e.target.value
                 // Allow empty string, numbers, and decimal point
                 if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  const numValue = parseFloat(value)
-                  if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                    setMinExposure(numValue)
-                  } else if (value === '') {
-                    setMinExposure(0.0)
+                  // Allow typing decimal values like "5."
+                  if (value === '' || value === '.') {
+                    setMinExposure(0)
+                  } else {
+                    const numValue = parseFloat(value)
+                    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                      setMinExposure(numValue)
+                    }
                   }
                 }
               }}
