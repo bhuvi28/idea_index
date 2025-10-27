@@ -120,7 +120,8 @@ class FundMappingService:
                         fund, valid_tickers, ticker_to_company, amc_name, min_exposure
                     )
                     
-                    if fund_mapping['total_exposure'] > 0:
+                    # Filter by fund-level total exposure (not individual ticker exposure)
+                    if fund_mapping['total_exposure'] >= min_exposure:
                         all_fund_mappings.append(fund_mapping)
             
             # Sort by exposure (descending)
@@ -197,8 +198,9 @@ class FundMappingService:
                     logger.debug(f"Found overlap: {company_name} ({ticker}) - {percentage}% in {fund_name}")
                     break
         
-        # Filter out holdings below minimum exposure
-        overlapping_holdings = [h for h in overlapping_holdings if h['exposure_percentage'] >= min_exposure]
+        # NOTE: Do NOT filter individual holdings by min_exposure here
+        # The min_exposure parameter is used to filter FUNDS by total_exposure, not individual tickers
+        # All overlapping holdings should be included regardless of their individual exposure
         
         return {
             'fund_name': fund_name,

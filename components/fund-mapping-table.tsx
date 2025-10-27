@@ -52,14 +52,14 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
   const [mappingData, setMappingData] = useState<FundMappingData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [minExposure, setMinExposure] = useState(0.1)
-  const [appliedMinExposure, setAppliedMinExposure] = useState(0.1)
+  const [minExposure, setMinExposure] = useState(5.0)
+  const [appliedMinExposure, setAppliedMinExposure] = useState(5.0)
   const [sortBy, setSortBy] = useState<'exposure' | 'name' | 'holdings'>('exposure')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [expandedFunds, setExpandedFunds] = useState<Set<string>>(new Set())
   const [selectedAMCs, setSelectedAMCs] = useState<Set<string>>(new Set())
 
-  // Fetch fund mapping data - only when holdings change, not on exposure change
+  // Fetch fund mapping data when holdings change or when filter is applied
   useEffect(() => {
     const loadFundMapping = async () => {
       if (!holdings || holdings.length === 0) return
@@ -68,8 +68,8 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
       setError(null)
 
       try {
-        // Always fetch with 0.0 min exposure to get all data, filter on UI
-        const data = await fetchFundMapping(holdings, 5.0)
+        // Fetch data with the applied exposure filter from backend
+        const data = await fetchFundMapping(holdings, appliedMinExposure)
         setMappingData(data)
       } catch (err) {
         console.error('Error fetching fund mapping:', err)
@@ -80,9 +80,9 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
     }
 
     loadFundMapping()
-  }, [holdings])
+  }, [holdings, appliedMinExposure])
 
-  // Handle applying the exposure filter
+  // Handle applying the exposure filter - triggers API call via useEffect
   const handleApplyFilter = () => {
     setAppliedMinExposure(minExposure)
   }
@@ -113,9 +113,8 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
     setSelectedAMCs(newSelected)
   }
 
-  // Filter and sort funds - filter by fund-level total_exposure
+  // Filter and sort funds - backend already filtered by total_exposure
   const sortedFunds = mappingData?.fund_mappings ? [...mappingData.fund_mappings]
-    .filter(fund => fund.total_exposure >= appliedMinExposure) // Filter by fund-level exposure
     .filter(fund => selectedAMCs.size === 0 || selectedAMCs.has(fund.amc_name))
     .sort((a, b) => {
       let comparison = 0
@@ -266,7 +265,7 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
                 <p className="text-2xl font-bold">
                   {sortedFunds.length > 0 
                     ? Math.max(...sortedFunds.map(f => f.total_exposure)).toFixed(2)
-                    : '5.00'}%
+                    : '0.00'}%
                 </p>
                 {sortedFunds.length > 0 && (
                   <p className="text-xs text-muted-foreground">in filtered results</p>
@@ -372,7 +371,7 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
                   if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
                     setMinExposure(numValue)
                   } else if (value === '') {
-                    setMinExposure(0.1)
+                    setMinExposure(0.0)
                   }
                 }
               }}
@@ -388,8 +387,16 @@ export default function FundMappingTable({ holdings, onBack }: FundMappingTableP
               onClick={handleApplyFilter}
               variant="default"
               className="whitespace-nowrap"
+              disabled={isLoading || appliedMinExposure === minExposure}
             >
-              Apply Filter
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Loading...
+                </>
+              ) : (
+                'Apply Filter'
+              )}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
