@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -35,7 +46,7 @@ export async function POST(request: NextRequest) {
       dataPoints: data.dates?.length || 0
     })
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: corsHeaders })
   } catch (error) {
     console.error("Error in performance-data API route:", error)
     
@@ -59,6 +70,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    return NextResponse.json(fallbackData, { status: 500 })
+    return NextResponse.json(fallbackData, { status: 500, headers: corsHeaders })
   }
 }
