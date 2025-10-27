@@ -22,7 +22,7 @@
             "exposure_type": null
           },
           {
-            "company": "HDFC Bank Ltd.£",
+            "company": "HDFC Bank Ltd.",
             "sector_or_rating": "Banks",
             "type": "Equity",
             "percentage_to_nav": 8.34,
@@ -1158,7 +1158,7 @@
         },
         "holdings": [
           {
-            "company": "HDFC Bank Ltd.£",
+            "company": "HDFC Bank Ltd.",
             "sector_or_rating": "Banks",
             "type": "Equity",
             "percentage_to_nav": 3.62,

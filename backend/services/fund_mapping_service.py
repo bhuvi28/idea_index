@@ -56,8 +56,15 @@ class FundMappingService:
                     self.amc_data["HDFC"] = hdfc_data
                     logger.info(f"Loaded HDFC funds: {len(hdfc_data.get('funds', []))}")
             
+            # Load SBI funds
+            sbi_file = Path(__file__).parent.parent / "etc" / "sbi_all_funds.json"
+            if sbi_file.exists():
+                with open(sbi_file, 'r', encoding='utf-8') as f:
+                    sbi_data = json.load(f)
+                    self.amc_data["SBI"] = sbi_data
+                    logger.info(f"Loaded SBI funds: {len(sbi_data.get('funds', []))}")
+            
             # Future: Add more AMCs here
-            # self.amc_data["SBI"] = load_sbi_funds()
             # self.amc_data["ICICI"] = load_icici_funds()
             
         except Exception as e:
